@@ -1,5 +1,5 @@
 from typing import Any, Callable, Iterator
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
 from PIL import Image
 import json
 
@@ -87,6 +87,17 @@ class ImageDatasetIterator:
 
         """
         self.process_images_to_json(self.json_file)
+    
+    def upload_to_huggingface(self, dataset_path: str) -> None:
+        """
+        Uploads the dataset to Hugging Face.
+
+        Args:
+            dataset_path (str): The path to save the dataset to.
+
+        """
+        dataset_dict = DatasetDict({"train": self.dataset})
+        dataset_dict.save_to_disk(dataset_path)
 
     @classmethod
     def create_and_run(
