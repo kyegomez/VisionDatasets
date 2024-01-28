@@ -11,6 +11,7 @@ class ImageDatasetIterator:
     Args:
         dataset_name (str): The name of the dataset.
         model (Callable): The model function to process the images.
+        json_file (str): The path to the JSON file.
 
     Attributes:
         dataset: The dataset to iterate over.
