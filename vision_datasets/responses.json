@@ -1,0 +1,30 @@
+[
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_082120_rust_on_a_metal_surface_png_jpg.rf.31cec528f5d8ce30bd3d972553a65ae8.jpg",
+        "response": "A close up of a rusted metal surface with chipped yellow paint."
+    },
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_082303_very_rusty_pipe_joints_png_jpg.rf.f0ede3795980a8a5f5b537c8ab72811b.jpg",
+        "response": "A rusted metal pipe with a rusted metal fitting."
+    },
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_082704_very_rusty_metal_surface_with_cracks_png_jpg.rf.432dc0760a11843a179917339a09d691.jpg",
+        "response": "A rusted metal surface with many circular patterns and some dark spots."
+    },
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_084033_rusty_metal_surfaces_png_jpg.rf.304047b42459f52eb1c0af40615bd35c.jpg",
+        "response": "The image shows a close-up of a rusted surface. The rust is concentrated in a few spots, forming rust streaks and patches. The rust has formed on a metallic surface, which is painted orange-brown. The rust appears to be on a wall, as there is a shadow visible at the bottom of the image. The rusted surface has a rough texture, with some areas appearing more pitted than others."
+    },
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_085439_rusty_metal_pipes_with_peeling_paint_png_jpg.rf.434bfaddaf0654efd5c7b345c7acd735.jpg",
+        "response": "The image shows a close-up of a rusted metal structure. There are several pipes of varying sizes and shapes, with the larger pipe on the left and the smaller ones on the right. The pipes are covered in rust, which has formed intricate patterns on their surfaces. The rust has also stained the wall behind the pipes, creating an overall desolate and weathered appearance."
+    },
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_085551_rusty_painted_surface_with_peeling_paint_png_jpg.rf.74091863d896533008921bcea663e23c.jpg",
+        "response": "A rusted metal surface with peeling paint in various shades of brown and white."
+    },
+    {
+        "image_path": "G:/images/syntheticcorrosion/test/Corrosion\\craiyon_085730_rusty_painted_surface_with_peeling_paint_png_jpg.rf.ce86bdc16388114e0b2fe306a9678568.jpg",
+        "response": "A close up of a rusted metal surface with some yellow paint left on it."
+    }
+]
