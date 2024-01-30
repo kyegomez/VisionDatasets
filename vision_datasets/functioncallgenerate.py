@@ -18,7 +18,6 @@ model_name_or_path = (
 tokenizer = AutoTokenizer.from_pretrained(
     model_name_or_path,
     torch_dtype=torch.float16,
-    fast_attention2=True,
     trust_remote_code=True,
 )
 model = AutoModelForCausalLM.from_pretrained(
@@ -92,7 +91,7 @@ Synthesized Function Call and Output:
         max_new_tokens=512,
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.pad_token_id,
-    )
+    ).cuda()
     # Decode the generated tokens to a string
     print(outputs)
     full_response = tokenizer.decode(
