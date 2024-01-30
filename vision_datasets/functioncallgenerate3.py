@@ -1,5 +1,7 @@
 import torch
 import json
+import torch.distributed as dist
+import torch.multiprocessing as mp
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
 import re
@@ -19,16 +21,19 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 model = AutoModelForCausalLM.from_pretrained(
     model_name_or_path,
-    device_map=("auto"),
+    device_map=("cuda:0"),
     torch_dtype=torch.float16,
     trust_remote_code=True,
+    use_safetensors=True
 )
 
 # File to store the responses
 functions_file = "functions.json"
+rank = 2
+world_size = 2
 
-
-def expand_qa(features):
+def expand_qa(features, rank, world_size):
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
     prompt = f"""{features}"""
     system_message = """When presented with features described by a visual language model, synthesize a function call and generate its output. The function call should be structured to capture specific attributes of the image as detailed by the visual description. Start the function call with the <fn_call> tag and then provide the expected output in JSON format.
 
@@ -81,7 +86,6 @@ Synthesized Function Call and Output:
     input_ids = tokenizer(
         prompt_template, return_tensors="pt"
     ).input_ids.cuda()
-    model.to(device)
     outputs = model.generate(
         input_ids,
         temperature=0.7,
@@ -143,9 +147,17 @@ def process_responses(file_path, output_file_path):
             save_response(item)
     return data
 
-
-# Process the responses.json file
-updated_data = process_responses("responses.json", "functions.json")
-
+def run_inference(rank, world_size):
+    # Process the responses.json file
+    updated_data = process_responses("responses.json", "functions.json")
 
 print("Data saved in functions.json")
+
+
+def main():
+    world_size = 2
+    mp.spawn(run_inference, args=(world_size,), nprocs=world_size, join=True)
+
+
+if __name__ == "__main__":
+    main()

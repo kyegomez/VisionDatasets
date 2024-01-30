@@ -1,5 +1,6 @@
 import torch
 import json
+from accelerate import PartialState
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
 import re
@@ -19,11 +20,11 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 model = AutoModelForCausalLM.from_pretrained(
     model_name_or_path,
-    device_map=("cuda:0"),
+    device_map=("cuda"),
     torch_dtype=torch.float16,
     trust_remote_code=True,
+    use_safetensors=True
 )
-
 # File to store the responses
 functions_file = "functions.json"
 
@@ -101,7 +102,7 @@ Synthesized Function Call and Output:
         )  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
-
+    print(response)
     return response
 
 
