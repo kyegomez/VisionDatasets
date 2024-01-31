@@ -1,0 +1,4 @@
+torch
+zetascale
+swarms
+transformers
