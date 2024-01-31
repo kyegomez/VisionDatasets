@@ -110,6 +110,7 @@ Synthesized Function Call and Output:
         )  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
+    print(response)
     return response
 
 
