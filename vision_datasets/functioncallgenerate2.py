@@ -1,14 +1,14 @@
 import torch
 import json
-from accelerate import PartialState
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers.generation import GenerationConfig
 import re
 import os
 
 device = torch.set_default_device("cuda")
 # Create a lock object
-model_name_or_path = "cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser"
+model_name_or_path = (
+    "cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser"
+)
 # Load the model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
     model_name_or_path,
@@ -18,7 +18,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 model = AutoModelForCausalLM.from_pretrained(
     model_name_or_path,
-    device_map=("cuda"),
+    device_map="cuda",
     torch_dtype=torch.float16,
     trust_remote_code=True,
     use_safetensors=True,
@@ -77,7 +77,9 @@ Synthesized Function Call and Output:
     <|im_start|>user
     {prompt}<|im_end|>
     <|im_start|>assistant"""
-    input_ids = tokenizer(prompt_template, return_tensors="pt").input_ids.cuda()
+    input_ids = tokenizer(
+        prompt_template, return_tensors="pt"
+    ).input_ids.cuda()
     model.to(device)
     outputs = model.generate(
         input_ids,
@@ -87,11 +89,15 @@ Synthesized Function Call and Output:
         pad_token_id=tokenizer.pad_token_id,
     )
     # Decode the generated tokens to a string
-    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    full_response = tokenizer.decode(
+        outputs[0], skip_special_tokens=True
+    )
     # Use regex to find everything after "assistant"
     match = re.search(r"assistant\s*(.*)", full_response, re.DOTALL)
     if match:
-        response = match.group(1)  # Extract everything after "assistant"
+        response = match.group(
+            1
+        )  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
     print(response)
@@ -130,7 +136,9 @@ def process_responses(file_path, output_file_path):
                 continue
             features = item.get("response", "")
             output = expand_qa(features)
-            item["new_response"] = output  # Add the new response to the original object
+            item["new_response"] = (
+                output  # Add the new response to the original object
+            )
             save_response(item)
     return data
 

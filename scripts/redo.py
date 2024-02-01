@@ -9,7 +9,8 @@ def create_image_json(response_file, images_file, output_file):
 
     # Create a mapping of image names to IDs
     image_id_map = {
-        os.path.basename(entry["image_path"]): entry["id"] for entry in response_data
+        os.path.basename(entry["image_path"]): entry["id"]
+        for entry in response_data
     }
 
     # Read the image file names from processed_images.txt

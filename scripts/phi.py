@@ -1,12 +1,10 @@
 import torch
 import json
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers.generation import GenerationConfig
 import re
 import os
 import concurrent.futures
 import threading
-from queue import Queue
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Create a lock object
@@ -16,7 +14,9 @@ model_name_or_path = "cognitivecomputations/dolphin-2_6-phi-2"
 tokenizer = AutoTokenizer.from_pretrained(
     model_name_or_path, torch_dtype="auto", trust_remote_code=True
 )
-model = AutoModelForCausalLM.from_pretrained(model_name_or_path, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name_or_path, trust_remote_code=True
+)
 
 # File to store the responses
 functions_file = "functions.json"
@@ -75,11 +75,15 @@ Synthesized Function Call and Output:
     input_ids = tokenizer(prompt_template, return_tensors="pt")
     outputs = model.generate(**input_ids, max_length=512)
     # Decode the generated tokens to a string
-    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    full_response = tokenizer.decode(
+        outputs[0], skip_special_tokens=True
+    )
     # Use regex to find everything after "assistant"
     match = re.search(r"assistant\s*(.*)", full_response, re.DOTALL)
     if match:
-        response = match.group(1)  # Extract everything after "assistant"
+        response = match.group(
+            1
+        )  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
 
@@ -107,7 +111,9 @@ def process_responses(file_path, output_file_path):
     def process_item(item):
         features = item.get("response", "")
         output = expand_qa(features)
-        item["new_response"] = output  # Add the new response to the original object
+        item["new_response"] = (
+            output  # Add the new response to the original object
+        )
         save_response(item)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
