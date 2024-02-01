@@ -7,8 +7,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
 import re
 import os
-os.environ['MASTER_ADDR'] = 'localhost'  # Use the appropriate master address
-os.environ['MASTER_PORT'] = '29500'      # Use an appropriate port number
+
+os.environ["MASTER_ADDR"] = "localhost"  # Use the appropriate master address
+os.environ["MASTER_PORT"] = "29500"  # Use an appropriate port number
 
 torch.distributed.is_available()
 # File to store the responses
@@ -17,6 +18,7 @@ features_file = "responses.json"
 
 device = torch.set_default_device("cuda")
 # Create a lock object
+
 
 # Initialization of the model and tokenizer should be done inside the function that runs on each process to ensure they are correctly mapped to the respective device (GPU).
 def setup_model_and_tokenizer(device):
@@ -31,7 +33,7 @@ def setup_model_and_tokenizer(device):
         model_name_or_path,
         torch_dtype=torch.float16,
         trust_remote_code=True,
-        use_safetensors=True
+        use_safetensors=True,
     )
     model.to(device)
     return tokenizer, model
@@ -87,27 +89,21 @@ Synthesized Function Call and Output:
     <|im_start|>user
     {prompt}<|im_end|>
     <|im_start|>assistant"""
-    input_ids = tokenizer(
-        prompt_template, return_tensors="pt"
-    ).input_ids.cuda()
+    input_ids = tokenizer(prompt_template, return_tensors="pt").input_ids.cuda()
     outputs = model.generate(
         input_ids,
         temperature=0.7,
-        max_new_tokens=512,
+        max_new_tokens=1024,
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.pad_token_id,
     )
     # Decode the generated tokens to a string
-    full_response = tokenizer.decode(
-        outputs[0], skip_special_tokens=True
-    )
+    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     # Use regex to find everything after "assistant"
     match = re.search(r"assistant\s*(.*)", full_response, re.DOTALL)
     if match:
-        response = match.group(
-            1
-        )  # Extract everything after "assistant"
+        response = match.group(1)  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
     print(response)
@@ -164,21 +160,20 @@ def process_responses(file_path, output_file_path):
                 continue
             features = item.get("response", "")
             output = expand_qa(features)
-            item["new_response"] = (
-                output  # Add the new response to the original object
-            )
+            item["new_response"] = output  # Add the new response to the original object
             save_response(item)
     return data
 
+
 def load_features(features_path, responses_path):
     # Load the features
-    with open(features_path, 'r') as f:
+    with open(features_path, "r") as f:
         features = json.load(f)
     processed_ids = set()
 
     # Load the processed responses
     try:
-        with open(responses_path, 'r') as f:
+        with open(responses_path, "r") as f:
             responses = json.load(f)
         # Extract the IDs of processed features
         processed_ids = {response["id"] for response in responses}
@@ -187,30 +182,44 @@ def load_features(features_path, responses_path):
         processed_ids = set()
 
     # Filter out features that have already been processed
-    new_features = [feature for feature in features if feature["id"] not in processed_ids]
+    new_features = [
+        feature for feature in features if feature["id"] not in processed_ids
+    ]
 
     return new_features
 
+
 def write_outputs_from_queue(output_queue, functions_path):
-    with open(functions_path, 'a') as f:
+    with open(functions_path, "a") as f:
         while True:
             output = output_queue.get()  # This will block until an item is available
             if output == "DONE":
                 break  # Break the loop if a "DONE" signal is received
             f.write(json.dumps(output) + "\n")
 
+
 def main():
-    set_start_method("spawn") # Recommended for PyTorch multiprocessing
+    set_start_method("spawn")  # Recommended for PyTorch multiprocessing
     world_size = torch.cuda.device_count()
     unprocessed_features = load_features(features_file, functions_file)
     output_queue = Queue()
-    writer_process = Process(target=write_outputs_from_queue, args=(output_queue, functions_file))
+    writer_process = Process(
+        target=write_outputs_from_queue, args=(output_queue, functions_file)
+    )
     writer_process.start()
-    features_with_ids = [{"id": feature["id"], "response": feature["response"]} for feature in unprocessed_features]
+    features_with_ids = [
+        {"id": feature["id"], "response": feature["response"]}
+        for feature in unprocessed_features
+    ]
     # Ensure features list is properly divided among processes or handled per your logic
     # This example assumes a simplistic division, which may need adjustment
-    mp.spawn(expand_qa, args=(features_with_ids, output_queue, world_size), nprocs=world_size, join=True)
-    
+    mp.spawn(
+        expand_qa,
+        args=(features_with_ids, output_queue, world_size),
+        nprocs=world_size,
+        join=True,
+    )
+
     # Signal the writer process that processing is done
     output_queue.put("DONE")
     writer_process.join()

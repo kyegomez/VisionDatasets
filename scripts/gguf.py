@@ -18,17 +18,13 @@ lock = threading.Lock()
 
 model_name_or_path = "TheBloke/dolphin-2.6-mistral-7B-dpo-laser-AWQ"
 # Load the model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained(
-    model_name_or_path, use_fast=True
-)
+tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 model = AutoModelForCausalLM.from_pretrained(
     model_name_or_path, low_cpu_mem_usage=True, device_map="cuda:0"
 )
 
 # Using the text streamer to stream output one token at a time
-streamer = TextStreamer(
-    tokenizer, skip_prompt=True, skip_special_tokens=True
-)
+streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
 # File to store the responses
 functions_file = "functions.json"
@@ -85,9 +81,7 @@ Synthesized Function Call and Output:
     {prompt}<|im_end|>
     <|im_start|>assistant"""
     print("before model")
-    input_ids = tokenizer(
-        prompt_template, return_tensors="pt"
-    ).input_ids.cuda()
+    input_ids = tokenizer(prompt_template, return_tensors="pt").input_ids.cuda()
     messages = [
         {"role": "system", "content": system_message},
         {"role": "user", "content": prompt},
@@ -101,9 +95,7 @@ Synthesized Function Call and Output:
         "repetition_penalty": 1.1,
     }
     try:
-        outputs = model.generate(
-            input_ids, streamer=streamer, **generation_params
-        )
+        outputs = model.generate(input_ids, streamer=streamer, **generation_params)
         print(outputs)
     except Exception as e:
         print(f"Error during model processing: {e}")
@@ -113,9 +105,7 @@ Synthesized Function Call and Output:
     # Use regex to find everything after "assistant"
     match = re.search(r"assistant\s*(.*)", outputs, re.DOTALL)
     if match:
-        response = match.group(
-            1
-        )  # Extract everything after "assistant"
+        response = match.group(1)  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
 
@@ -143,9 +133,7 @@ def process_responses(file_path, output_file_path):
     def process_item(item):
         features = item.get("response", "")
         output = expand_qa(features)
-        item["new_response"] = (
-            output  # Add the new response to the original object
-        )
+        item["new_response"] = output  # Add the new response to the original object
         save_response(item)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:

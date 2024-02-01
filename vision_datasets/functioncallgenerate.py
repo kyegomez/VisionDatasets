@@ -11,9 +11,7 @@ from queue import Queue
 device = torch.set_default_device("cuda")
 # Create a lock object
 lock = threading.Lock()
-model_name_or_path = (
-    "cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser"
-)
+model_name_or_path = "cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser"
 # Load the model and tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
     model_name_or_path,
@@ -78,9 +76,7 @@ Synthesized Function Call and Output:
     <|im_start|>user
     {prompt}<|im_end|>
     <|im_start|>assistant"""
-    inputs = tokenizer(
-        prompt_template, return_tensors="pt"
-    ).inputs.cuda()
+    inputs = tokenizer(prompt_template, return_tensors="pt").inputs.cuda()
     print(inputs)
     outputs = model.generate(
         **inputs,
@@ -94,15 +90,11 @@ Synthesized Function Call and Output:
     ).cuda()
     # Decode the generated tokens to a string
     print(outputs)
-    full_response = tokenizer.decode(
-        outputs[0], skip_special_tokens=True
-    )
+    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     # Use regex to find everything after "assistant"
     match = re.search(r"assistant\s*(.*)", full_response, re.DOTALL)
     if match:
-        response = match.group(
-            1
-        )  # Extract everything after "assistant"
+        response = match.group(1)  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
 
@@ -130,9 +122,7 @@ def process_responses(file_path, output_file_path):
     def process_item(item):
         features = item.get("response", "")
         output = expand_qa(features)
-        item["new_response"] = (
-            output  # Add the new response to the original object
-        )
+        item["new_response"] = output  # Add the new response to the original object
         save_response(item)
 
     with concurrent.futures.ThreadPoolExecutor() as executor:

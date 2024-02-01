@@ -24,9 +24,7 @@ else:
 responses_file = "responses.json"
 
 
-tokenizer = AutoTokenizer.from_pretrained(
-    "Qwen/Qwen-VL-Chat", trust_remote_code=True
-)
+tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
 
 # Instantiate the QwenVLMultiModal model
 model = AutoModelForCausalLM.from_pretrained(
@@ -47,13 +45,13 @@ shortprompt = "Begin by describing what you see in the image. Extract as many fe
 # Function to process an images and generate QA pairs
 def generate_qa_for_image(image_path):
     # Run the model to generate QA pairs
-    query = tokenizer.from_list_format([
-        {"image": image_path},
-        {"text": VISUAL_CHAIN_OF_THOUGHT},
-    ])
-    response, history = model.chat(
-        tokenizer, query=query, history=None
+    query = tokenizer.from_list_format(
+        [
+            {"image": image_path},
+            {"text": VISUAL_CHAIN_OF_THOUGHT},
+        ]
     )
+    response, history = model.chat(tokenizer, query=query, history=None)
     return response, history
 
 
@@ -72,8 +70,7 @@ def save_image_id_map(processed_images, responses_file, output_file):
     with open(responses_file, "r") as file:
         response_data = json.load(file)
     image_id_map = {
-        entry["image_path"].split("\\")[-1]: entry["id"]
-        for entry in response_data
+        entry["image_path"].split("\\")[-1]: entry["id"] for entry in response_data
     }
     image_json_data = [
         {"image_name": img, "id": image_id_map.get(img)}

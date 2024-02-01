@@ -62,9 +62,7 @@ class ImageDatasetIterator:
         """
         self.index = 0  # Reset index to start from the beginning
         for image in self:
-            output = self.model(
-                task, image
-            )  # Pass image into the model
+            output = self.model(task, image)  # Pass image into the model
             yield output
 
     def process_images_to_json(self) -> None:
