@@ -4,11 +4,12 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from multiprocessing import Process, Queue, set_start_method
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers.generation import GenerationConfig
 import re
 import os
 
-os.environ["MASTER_ADDR"] = "localhost"  # Use the appropriate master address
+os.environ["MASTER_ADDR"] = (
+    "localhost"  # Use the appropriate master address
+)
 os.environ["MASTER_PORT"] = "29500"  # Use an appropriate port number
 
 torch.distributed.is_available()
@@ -22,7 +23,9 @@ device = torch.set_default_device("cuda")
 
 # Initialization of the model and tokenizer should be done inside the function that runs on each process to ensure they are correctly mapped to the respective device (GPU).
 def setup_model_and_tokenizer(device):
-    model_name_or_path = "cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser"
+    model_name_or_path = (
+        "cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser"
+    )
     tokenizer = AutoTokenizer.from_pretrained(
         model_name_or_path,
         torch_dtype=torch.float16,
@@ -89,7 +92,9 @@ Synthesized Function Call and Output:
     <|im_start|>user
     {prompt}<|im_end|>
     <|im_start|>assistant"""
-    input_ids = tokenizer(prompt_template, return_tensors="pt").input_ids.cuda()
+    input_ids = tokenizer(
+        prompt_template, return_tensors="pt"
+    ).input_ids.cuda()
     outputs = model.generate(
         input_ids,
         temperature=0.7,
@@ -98,12 +103,16 @@ Synthesized Function Call and Output:
         pad_token_id=tokenizer.pad_token_id,
     )
     # Decode the generated tokens to a string
-    full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    full_response = tokenizer.decode(
+        outputs[0], skip_special_tokens=True
+    )
 
     # Use regex to find everything after "assistant"
     match = re.search(r"assistant\s*(.*)", full_response, re.DOTALL)
     if match:
-        response = match.group(1)  # Extract everything after "assistant"
+        response = match.group(
+            1
+        )  # Extract everything after "assistant"
     else:
         response = "No response found after 'assistant'."
     print(response)
@@ -111,15 +120,21 @@ Synthesized Function Call and Output:
 
 
 def expand_qa(rank, features_with_ids, output_queue, world_size):
-    torch.cuda.set_device(rank)  # Set the current device to the specified GPU
+    torch.cuda.set_device(
+        rank
+    )  # Set the current device to the specified GPU
     device = torch.device(f"cuda:{rank}")
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
     tokenizer, model = setup_model_and_tokenizer(device)
     print(f"Process {rank} is running on GPU {rank}")
     for feature in features_with_ids:
         if rank == (feature["id"] % world_size):
-            response = generate_response(tokenizer, model, feature["response"])
-            output_queue.put({"id": feature["id"], "response": response})
+            response = generate_response(
+                tokenizer, model, feature["response"]
+            )
+            output_queue.put(
+                {"id": feature["id"], "response": response}
+            )
     # Save the response
     if rank == 0:
         for _ in range(world_size):
@@ -160,7 +175,9 @@ def process_responses(file_path, output_file_path):
                 continue
             features = item.get("response", "")
             output = expand_qa(features)
-            item["new_response"] = output  # Add the new response to the original object
+            item["new_response"] = (
+                output  # Add the new response to the original object
+            )
             save_response(item)
     return data
 
@@ -183,7 +200,9 @@ def load_features(features_path, responses_path):
 
     # Filter out features that have already been processed
     new_features = [
-        feature for feature in features if feature["id"] not in processed_ids
+        feature
+        for feature in features
+        if feature["id"] not in processed_ids
     ]
 
     return new_features
@@ -192,19 +211,26 @@ def load_features(features_path, responses_path):
 def write_outputs_from_queue(output_queue, functions_path):
     with open(functions_path, "a") as f:
         while True:
-            output = output_queue.get()  # This will block until an item is available
+            output = (
+                output_queue.get()
+            )  # This will block until an item is available
             if output == "DONE":
                 break  # Break the loop if a "DONE" signal is received
             f.write(json.dumps(output) + "\n")
 
 
 def main():
-    set_start_method("spawn")  # Recommended for PyTorch multiprocessing
+    set_start_method(
+        "spawn"
+    )  # Recommended for PyTorch multiprocessing
     world_size = torch.cuda.device_count()
-    unprocessed_features = load_features(features_file, functions_file)
+    unprocessed_features = load_features(
+        features_file, functions_file
+    )
     output_queue = Queue()
     writer_process = Process(
-        target=write_outputs_from_queue, args=(output_queue, functions_file)
+        target=write_outputs_from_queue,
+        args=(output_queue, functions_file),
     )
     writer_process.start()
     features_with_ids = [
