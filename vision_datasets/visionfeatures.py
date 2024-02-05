@@ -4,14 +4,15 @@ from transformers.generation import GenerationConfig
 from prompt import VISUAL_CHAIN_OF_THOUGHT
 import torch
 import json
+import requests, zipfile, io
 
 torch.manual_seed(1234)
 
 
 # Path to the images folder on the G drive
-image_folder_path = "G:\images\combined"
+image_folder_path = "G:\images\VisDrone2019-DET-train\VisDrone2019-DET-train\images"
 # File to store the list of processed images
-processed_images_file = "processed_images.txt"
+processed_images_file = "droneprocessed_images.txt"
 # Load the list of already processed images
 if os.path.exists(processed_images_file):
     with open(processed_images_file, "r") as file:
@@ -21,7 +22,7 @@ else:
 
 
 # File to store the responses
-responses_file = "responses.json"
+responses_file = "drone_responses.json"
 
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
@@ -30,17 +31,27 @@ tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code
 model = AutoModelForCausalLM.from_pretrained(
     "Qwen/Qwen-VL-Chat",
     device_map="auto",
-    trust_remote_code=True,
-    bf16=True,
+    torch_dtype="auto",
+    trust_remote_code=True
 ).eval()
 
-
 # Specify hyperparameters for generation
-model.generation_config = GenerationConfig.from_pretrained(
-    "Qwen/Qwen-VL-Chat", trust_remote_code=True
-)
+#model.generation_config = GenerationConfig.from_pretrained(
+#    "Qwen/Qwen-VL-Chat", trust_remote_code=True
+#)
 shortprompt = "Begin by describing what you see in the image. Extract as many features as you can in english. Make sure you are as descriptive as possible in english."
 
+def download_and_extract_zipfile(zipfile_url, extract_to):
+    """
+    Download a zipfile from a Google Drive public link and extract it.
+
+    Parameters:
+    - zipfile_url: The URL to the zipfile.
+    - extract_to: Directory path where the zipfile should be extracted.
+    """
+    r = requests.get(zipfile_url)
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    z.extractall(extract_to)
 
 # Function to process an images and generate QA pairs
 def generate_qa_for_image(image_path):
